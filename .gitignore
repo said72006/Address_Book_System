@@ -28,3 +28,11 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+# Generated local contact data (may contain personal information)
+contacts.txt
+
+# Local IDE and build artifacts
+.idea/
+*.iml
+build/
+*.class
