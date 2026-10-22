@@ -43,7 +43,7 @@ The project demonstrates fundamental Java programming concepts through a practic
 Address_Book_System/
 ├── src/
 │   └── AddressBook.java
-├── contacts.txt
+├── contacts.example.txt (fictional sample)\n└── contacts.txt (created locally; ignored by Git)
 └── README.md
 ```
 
@@ -91,3 +91,7 @@ This project was created to practice core Java programming and file handling thr
 ---
 
 **Author:** Said Ahmed Abu-Fouda
+
+## Privacy
+
+The application writes contacts to a local `contacts.txt` file, which may contain real phone numbers. It is intentionally excluded by `.gitignore`. A fictional `contacts.example.txt` is provided for demonstration. Do not commit real contact records, student identifiers or other personal information. Existing Git history can retain content from earlier commits even after deletion.
