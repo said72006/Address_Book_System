@@ -43,7 +43,8 @@ The project demonstrates fundamental Java programming concepts through a practic
 Address_Book_System/
 ├── src/
 │   └── AddressBook.java
-├── contacts.example.txt (fictional sample)\n└── contacts.txt (created locally; ignored by Git)
+├── contacts.example.txt (fictional sample)
+├── contacts.txt (created locally; ignored by Git)
 └── README.md
 ```
 
