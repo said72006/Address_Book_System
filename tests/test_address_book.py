@@ -38,6 +38,30 @@ class AddressBookTests(unittest.TestCase):
         self.assertIn("Skipping malformed", proc.stdout)
         self.assertIn("Alice", proc.stdout)
 
+    def test_unexpected_end_of_input_exits_cleanly(self):
+        proc, _ = execute("")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("Input closed.", proc.stdout)
+
+    def test_invalid_phone_rejected(self):
+        proc, records = execute("1\\nAlice\\nWork\\n---\\n7\\n".replace("\\n", "\n"))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("Invalid phone number", proc.stdout)
+        self.assertEqual(records, "")
+
+    def test_contact_file_private_on_posix(self):
+        import os
+        import stat
+        if os.name != "posix":
+            self.skipTest("POSIX-only permission assertion")
+        with tempfile.TemporaryDirectory() as directory:
+            proc = subprocess.run(["java", "-cp", CLASSPATH, "AddressBook"],
+                input="1\nAlice\nWork\n+123456789\n7\n",
+                text=True, cwd=directory, capture_output=True, timeout=8)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            mode = stat.S_IMODE((pathlib.Path(directory) / "contacts.txt").stat().st_mode)
+            self.assertEqual(mode & 0o077, 0, "Contacts should not be readable by group/others")
+
     def test_empty_search_is_rejected(self):
         proc, _ = execute("2\n\n7\n")
         self.assertEqual(proc.returncode, 0, proc.stderr)
