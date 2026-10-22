@@ -1,7 +1,11 @@
 // ===================== Imports =====================
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -53,8 +57,8 @@ public class AddressBook {
         type = type.substring(0,1).toUpperCase() + type.substring(1);
         System.out.print("number: ");
         String number = input.nextLine().trim();
-        if(!number.matches("[+0-9() -]{3,30}")){
-            System.out.println("Number cannot be empty.");
+        if(!number.matches("(?=.*[0-9].*[0-9].*[0-9])[+0-9() -]{3,30}")){
+            System.out.println("Invalid phone number: at least three digits are required.");
             return;
         }
         boolean exists = false;
@@ -69,8 +73,7 @@ public class AddressBook {
             System.out.println("This number already exists.");
         } else {
             contactInfos.add(new Contact_info(name, type, number));
-            saveContacts(contactInfos);
-            SuccessMessage();
+            if (saveContacts(contactInfos)) SuccessMessage();
         }
     }
 
@@ -173,19 +176,43 @@ public class AddressBook {
     // ===================== FILE HANDLING =====================
 
 
-    public static void saveContacts(ArrayList<Contact_info> contactInfos) {
+    // Write in the same directory, then replace the old file in one move.
+    // This avoids destroying the last saved address book on interrupted writes.
+    public static boolean saveContacts(ArrayList<Contact_info> contactInfos) {
+        Path temp = null;
         try {
-            FileWriter writer = new FileWriter("contacts.txt");
-
-            for (Contact_info c : contactInfos) {
-                writer.write(c.name + "|" + c.type + "|" + c.number + "\n");
+            Path target = Path.of("contacts.txt").toAbsolutePath();
+            temp = Files.createTempFile(target.getParent(), ".contacts-", ".tmp");
+            try {
+                Files.setPosixFilePermissions(temp, PosixFilePermissions.fromString("rw-------"));
+            } catch (UnsupportedOperationException ignored) {
+                // POSIX file permissions are not available on every operating system.
             }
 
-            writer.close();
+            List<String> lines = new ArrayList<>();
+            for (Contact_info c : contactInfos) {
+                lines.add(c.name + "|" + c.type + "|" + c.number);
+            }
+            Files.write(temp, lines, StandardCharsets.UTF_8);
+            try {
+                Files.move(temp, target, StandardCopyOption.ATOMIC_MOVE,
+                           StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, target, StandardCopyOption.REPLACE_EXISTING);
+            }
             System.out.println("Contacts saved successfully!");
-
-        } catch (Exception e) {
-            System.out.println("Error saving file.");
+            return true;
+        } catch (IOException | SecurityException e) {
+            System.out.println("Error saving file. Existing data was not overwritten.");
+            return false;
+        } finally {
+            if (temp != null) {
+                try {
+                    Files.deleteIfExists(temp);
+                } catch (IOException ignored) {
+                    // A best-effort cleanup only.
+                }
+            }
         }
     }
 
@@ -237,6 +264,10 @@ public class AddressBook {
                     "7. Exit\n" +
                     "Please to enter your choice: ");
             // STORE choice
+            if (!input.hasNextLine()) {
+                System.out.println("Input closed.");
+                break;
+            }
             String choiceText = input.nextLine().trim();
             int choice;
             try {
@@ -246,6 +277,7 @@ public class AddressBook {
                 continue;
             }
             // CASE depend on choice
+            try {
             switch (choice) {
                 case 1:
                     addContact(contactInfos, input);
@@ -272,6 +304,10 @@ public class AddressBook {
                     break;
                 default:
                     System.out.println("Invalid choice.");
+            }
+            } catch (java.util.NoSuchElementException e) {
+                System.out.println("Input closed.");
+                break;
             }
         }
     }
