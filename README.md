@@ -42,7 +42,7 @@ The project demonstrates fundamental Java programming concepts through a practic
 ```text
 Address_Book_System/
 ├── src/
-│   └── Said_120253338.java
+│   └── AddressBook.java
 ├── contacts.txt
 └── README.md
 ```
@@ -54,7 +54,7 @@ Address_Book_System/
 3. Run:
 
 ```text
-src/Said_120253338.java
+src/AddressBook.java
 ```
 
 You can also compile and run it from the terminal using Java commands.
